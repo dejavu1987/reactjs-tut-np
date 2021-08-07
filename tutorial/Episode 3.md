@@ -4,9 +4,6 @@
 
 - Recap
 - UseEffect Hook
-  - What is useEffect() hook
-  - When to use it
-  - How to optimize
 
 ## Example
 

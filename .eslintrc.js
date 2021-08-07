@@ -22,6 +22,7 @@ module.exports = {
     'react/jsx-pascal-case': 'off',
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn'
+    'react-hooks/exhaustive-deps': 'warn',
+    'no-unused-vars': 'warn'
   }
 };
