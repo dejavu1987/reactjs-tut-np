@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import Button from './Botton';
 import TodosService from '../services/todos';
 
-const todosService = new TodosService('http://localhost:4000/todos');
+const DEFAULT_API_URL = 'http://localhost:4000/todos';
+
+const todosService = new TodosService(DEFAULT_API_URL);
 
 const Todos = () => {
   const [todosList, setTodosList] = useState([]);
   const [newTodo, setNewTodo] = useState('');
-  const [backendUrl, setBackendUrl] = useState('http://localhost:4000/todos');
+
+  const [backendUrl, setBackendUrl] = useState(DEFAULT_API_URL);
 
   useEffect(() => {
     todosService.setURI(backendUrl);
@@ -24,16 +27,19 @@ const Todos = () => {
       setTodosList([...todosList, todo]);
     });
   };
+
   const updateTodo = todo => {
     todosService.updateTodo(todo).then(() => {
       setTodosList(todosList.map(t => (t.id === todo.id ? todo : t)));
     });
   };
+
   const deleteTodo = todoId => {
     todosService.deleteTodo(todoId).then(() => {
       setTodosList(todosList.filter(t => t.id !== todoId));
     });
   };
+
   return (
     <div className="container m-auto p-2">
       <fieldset className="border p-2 mb-5">
