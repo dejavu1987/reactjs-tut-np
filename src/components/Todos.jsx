@@ -1,6 +1,10 @@
+import classNames from 'classnames';
 import { useEffect, useState } from 'react';
 
 import Button from './Botton';
+import TodosService from '../services/todos';
+
+const todosService = new TodosService('http://localhost:4000/todos');
 
 const Todos = () => {
   const [todosList, setTodosList] = useState([]);
@@ -8,74 +12,66 @@ const Todos = () => {
   const [backendUrl, setBackendUrl] = useState('http://localhost:4000/todos');
 
   useEffect(() => {
-    fetch(backendUrl)
-      .then(res => res.json())
-      .then(todos => {
-        setTodosList(todos);
-      });
-    return () => {
-      console.log('cleaned up');
-    };
+    todosService.setURI(backendUrl);
+    todosService.getTodos().then(todos => {
+      setTodosList(todos);
+    });
   }, [backendUrl]);
 
-  const updateTodo = todo => {
-    fetch(`http://localhost:4000/todos/${todo.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(todo)
-    })
-      .then(res => res.json())
-      .then(t => {
-        console.log({ t });
-      });
-  };
-
   const createTodo = todo => {
-    fetch(`http://localhost:4000/todos`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(todo)
-    })
-      .then(res => res.json())
-      .then(t => {
-        console.log({ t });
-      });
+    todosService.createTodo(todo).then(() => {
+      setNewTodo('');
+      setTodosList([...todosList, todo]);
+    });
   };
-
+  const updateTodo = todo => {
+    todosService.updateTodo(todo).then(() => {
+      setTodosList(todosList.map(t => (t.id === todo.id ? todo : t)));
+    });
+  };
+  const deleteTodo = todoId => {
+    todosService.deleteTodo(todoId).then(() => {
+      setTodosList(todosList.filter(t => t.id !== todoId));
+    });
+  };
   return (
-    <div>
+    <div className="container m-auto p-2">
+      <fieldset className="border p-2 mb-5">
+        <div className="form-field flex align-items-center">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          <label htmlFor="url" className="self-center">
+            Backend URL
+          </label>
+          <input
+            id="url"
+            name="backendUrl"
+            className="text-black border p-2 flex-1 ml-2"
+            value={backendUrl}
+            onChange={e => {
+              setBackendUrl(e.target.value);
+            }}
+            type="text"
+            placeholder="url?"
+          />
+        </div>
+      </fieldset>
+
       <h2 className="text-4xl border-bottom-1">Todos</h2>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          // console.log('submit');
 
-      <input
-        name="backendUrl"
-        className="text-black"
-        value={backendUrl}
-        onChange={e => {
-          setBackendUrl(e.target.value);
+          createTodo({
+            title: newTodo,
+            completed: false
+          });
         }}
-        type="text"
-        placeholder="url?"
-      />
-
-      <div className="todo-form">
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            console.log('submit');
-
-            createTodo({
-              title: newTodo,
-              completed: false
-            });
-          }}
-        >
+      >
+        <div className="todo-form flex">
           <input
             name="newTodo"
-            className="text-black"
+            className="text-black border p-2 flex-1 ml-2"
             value={newTodo}
             onChange={e => {
               setNewTodo(e.target.value);
@@ -84,19 +80,30 @@ const Todos = () => {
             placeholder="What needs to be done?"
           />
           <Button type="submit">Add</Button>
-        </form>
-      </div>
-      <ol className="list-decimal">
-        {todosList.map(todo => (
-          <li key={todo.id} className={todo.completed ? 'line-through' : ''}>
-            {todo.title}{' '}
+        </div>
+      </form>
+      <ol className="list-decimal  m-3 divide-y-2 divide-gray divide-solid">
+        {todosList.map((todo, i) => (
+          <li key={todo.id} className={classNames('flex', i % 2 ? 'bg-gray-200' : '')}>
+            <span className={classNames(todo.completed ? 'line-through' : '', 'pl-2 flex-1 self-center')}>
+              {todo.title}
+            </span>
             <Button
               onClick={() => {
                 updateTodo({ ...todo, completed: !todo.completed });
               }}
             >
-              Done
+              {todo.completed ? '❌' : '✔'}
             </Button>
+            <button
+              type="button"
+              className="ml-2 border-red-400 border px-2 rounded-full"
+              onClick={() => {
+                deleteTodo(todo.id);
+              }}
+            >
+              🗑
+            </button>
           </li>
         ))}
       </ol>
